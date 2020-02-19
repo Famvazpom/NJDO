@@ -1,0 +1,4 @@
+To Dooms:
+ 1.- Guardar datos insertados para uso posterior ( incluir un txt? )
+ 2.- Guardar resultados en un csv para revision en excel
+ 3.- Corregir la parte grafica ( Al agregar demasiados datos los botones se recorren hasta el punto de no ser visibles )
