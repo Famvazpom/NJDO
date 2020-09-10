@@ -1,5 +1,6 @@
 import PyPDF2
 import re
+import csv
 
 class object():
 
@@ -19,3 +20,24 @@ class object():
                 if ResSearch:
                     results[String].append(str(i))
         return results
+    
+    def loadCodeFile(self):
+        try:
+            with open('codes.cfg', 'r') as cfgfile:
+                codes = []
+                reader = csv.reader(cfgfile,delimiter=',')
+                for row in reader:
+                    for value in row:
+                        codes.append(value)
+                return codes
+        except IOError:
+            return False
+
+    def saveCodes(self,codes):
+        try:
+            with open("codes.cfg", 'w') as cfgfile:
+                wr = csv.writer(cfgfile, quoting=csv.QUOTE_ALL)
+                wr.writerow(codes)
+            return True
+        except IOError:
+            return False

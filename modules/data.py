@@ -1,9 +1,9 @@
-MSG_ERROR = "Error"
-MSG_WRNG = "Warning"
-MSG_INFO = "Informacion"
+MSG_ERROR = 1
+MSG_WRNG = 2
+MSG_INFO = 3
 
-LSTBX = "ListBox"
-SRLL = "Scroll"
-BTN = "Button"
-LBL = "Label"
-FRM = "Frame"
+LSTBX = 1
+SRLL = 2
+BTN = 3
+LBL = 4
+FRM = 5
