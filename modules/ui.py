@@ -10,6 +10,7 @@ class program:
 	codes = None
 	engine = None
 	widgets = {}
+	frames = {}
 
 	def __init__(self,master):
 
@@ -19,20 +20,43 @@ class program:
 		self.ui()
 
 	def ui(self):
-		# self.widgets["name"] = [ tk.widget,row,col,type,framename,sticky,scrollcmd ]
+
+		# self.frames["name"] = [ tk.Frame, side, fill, expand ]
+		self.frames["top_frame"] = [ tk.Frame(self.master), "top","x",True]
+		self.frames["middle_frame"] = [ tk.Frame(self.master),"top","both",True ]
+		self.frames["left_frame"] = [ tk.Frame(self.frames["middle_frame"][0]), 0,0]
+		self.frames["right_frame"] = [ tk.Frame(self.frames["middle_frame"][0]), 0,1]
+
 		
-		self.widgets["file_label"] = [tk.Label(self.master,text = "Seleccione un archivo"),0,0,LBL,False,False,False,False] 
-		self.widgets["code_list"] = [tk.Listbox(self.master),1,0,LSTBX,"codeframe",tk.N+tk.S+tk.E+tk.W,False,False]
-		self.widgets["codescroll"] = [tk.Scrollbar(self.master),1,1,SRLL,"codeframe",tk.NW+tk.S,"code_list"]
-		self.widgets["load_button"] = [tk.Button(self.master,text = "Escoger archivo",command=self.load),0,2,BTN,False,False,False]
-		self.widgets["code_button"] = [tk.Button(self.master,text="Agregar codigos a buscar",command=self.loadCodes),1,2,BTN,False,False,False]
-		self.widgets["delcode_button"] = [tk.Button(self.master,text="Eliminar codigo",command=self.delete),2,2,BTN,False,False,False]
-		self.widgets["close_button"] = [tk.Button(self.master,text="Cerrar",command=self.master.quit),2,0,BTN,False,False,False]
-		self.widgets["search"] = [tk.Button(self.master,text="Buscar",command=self.search),2,3,BTN,False,False,False]
+		# self.widgets["name"] = [ tk.widget,row,col,type,framename,sticky,scrollcmd ]
+		self.widgets["file_label"] = [tk.Label(self.frames["top_frame"][0],text = "Seleccione un archivo"),0,0,LBL,False,False,False,False] 
+		self.widgets["load_button"] = [tk.Button(self.frames["top_frame"][0],text = "Escoger archivo",command=self.load),0,1,BTN,False,False,False]
+		
+		self.widgets["code_list"] = [tk.Listbox(self.frames["left_frame"][0]),1,0,LSTBX,"codeframe",tk.N+tk.S+tk.E+tk.W,False,False]
+		self.widgets["codescroll"] = [tk.Scrollbar(self.frames["left_frame"][0]),1,1,SRLL,"codeframe",tk.NW+tk.S,"code_list"]
+		
+		self.widgets["code_button"] = [tk.Button(self.frames["right_frame"][0],text="Agregar codigo",command=self.loadCodes),0,0,BTN,False,False,False]
+		self.widgets["delcode_button"] = [tk.Button(self.frames["right_frame"][0],text="Eliminar codigo",command=self.delete),1,0,BTN,False,False,False]
+		self.widgets["clean_button"] = [tk.Button(self.frames["right_frame"][0],text="Limpiar codigos",command=self.cleanCodes),2,0,BTN,False,False,False ]
+		self.widgets["search_button"] = [tk.Button(self.frames["right_frame"][0],text="Buscar",command=self.search),3,0,BTN,False,False,False]
 
 		self.update()
-			
+	
+	def update_frames(self,frame,isContained=False):
+
+		frameObj = self.frames[frame][0]
+		if isContained:
+			frameObj.grid(row=self.frames[frame][1],column=self.frames[frame][2])
+		else:
+			frameObj.pack(side=self.frames[frame][1],fill=self.frames[frame][2],expand=self.frames[frame][3],pady=5)
+
 	def update(self):
+		
+		self.update_frames("top_frame")
+		self.update_frames("middle_frame")
+		self.update_frames("left_frame",True)
+		self.update_frames("right_frame",True)
+
 		for name in self.widgets:
 				
 			widget = self.widgets[name][0]
@@ -48,12 +72,15 @@ class program:
 
 				widget.grid(row = row, column = col,pady = 5,padx = 10,sticky=stk)
 				widget['command'] = self.widgets[cfg][0].yview
-			
+
 			else:
 				widget.grid(row = row, column = col,pady = 5,padx = 10)
 
-
-
+	def cleanCodes(self):
+		if self.codes:
+			self.codes.clear()
+			self.UpdateCodes()
+			self.sendMessage(MSG_INFO,"Lista limpiada exitosamente","Informacion")
 
 	def loadCodes(self):
 
@@ -69,26 +96,30 @@ class program:
 		else:
 			self.codes.append(code)
 			self.UpdateCodes()
-		return
 
 	def delete(self):
 
 		if not self.codes or len(self.codes) < 1 :
 			self.sendMessage(MSG_ERROR,"No hay codigos insertados","Error")
 			return
-		code = askstring('Codigo a buscar',"Inserte el codigo a borrar")
-
-		if code and code in self.codes:
-			self.codes.pop(self.codes.index(code))
+		
+		selection = self.widgets["code_list"][0].curselection()
+		if selection:
+			self.codes.pop(selection[0])
+		else:
+			code = askstring('Codigo a buscar',"Inserte el codigo a borrar")
+			if not code:
+				self.sendMessage(MSG_ERROR,"No se inserto un codigo","Error")
+			elif code not in self.codes:
+				self.sendMessage(MSG_ERROR,"No se encuentra el codigo","Error")
+			else:
+				self.codes.pop(self.codes.index(code))
 		self.UpdateCodes()
 
-
-
 	def UpdateCodes(self):
+		self.codes.sort()
 		self.widgets["code_list"][0].delete(0,tk.END)
-		if len(self.codes)<1:
-			self.sendMessage(MSG_WRNG,"Sin datos cargados","Advertencia")
-		else:
+		if self.codes:
 			for i in self.codes:
 				self.widgets["code_list"][0].insert(tk.END,i)
 
@@ -98,11 +129,12 @@ class program:
 			self.editLabel("file_label","Archivo Cargado")
 
 	def search(self):
-		if not self.codes or not self.file or len(self.codes)<1:
-			self.sendMessage(MSG_ERROR,"No hay codigos insertados o un archivo","Error")
-			return
-		self.showResults(self.engine.search(self.file,self.codes))
-		return
+		if not self.file:
+			self.sendMessage(MSG_ERROR,"No hay un archivo seleccionado","Error")
+		elif not self.codes:
+			self.sendMessage(MSG_ERROR,"No hay codigos insertados","Error")
+		else:
+			self.showResults(self.engine.search(self.file,self.codes))
 
 	def showResults(self,results):
 		msg = "Codigo: Paginas\n"
@@ -117,7 +149,6 @@ class program:
 		self.sendMessage(MSG_INFO,msg,"Datos Encontrados")
 
 	def sendMessage(self,messagetype,msg,title):
-
 		if messagetype == MSG_ERROR:
 			tk.messagebox.showerror(message=msg, title=title)
 		if messagetype == MSG_INFO:
@@ -135,7 +166,6 @@ class program:
 
 def start_program():
 	root = tk.Tk()
-	root.minsize(400,400)
 	root.geometry()
 	gui = program(root)
 	root.mainloop()
